@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图形探秘实验室 · 完整版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:linear-gradient(135deg,#1e1b4b,#312e81,#4c1d95);min-height:100vh;padding:10px}
+.app{max-width:900px;margin:0 auto}
+.head{text-align:center;color:#fff;padding:14px 0 10px}
+.head h1{font-size:clamp(16px,4vw,24px);margin-bottom:2px;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+.head h1 span{background:linear-gradient(90deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.head p{font-size:12px;opacity:.7}
+.card{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+.nav{display:flex;background:linear-gradient(90deg,#f8f7ff,#ede9fe);overflow-x:auto;border-bottom:2px solid #e8e5ff}
+.nav-btn{flex:none;padding:10px 14px;border:none;background:none;font-size:12px;cursor:pointer;color:#888;transition:.3s;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:inherit}
+.nav-btn.active{color:#4f46e5;border-bottom-color:#4f46e5;font-weight:700;background:#fff}
+.nav-btn:hover:not(.active){color:#6366f1;background:rgba(99,102,241,.05)}
+.pane{display:none;padding:14px}
+.pane.active{display:block}
+.info{background:#f0f0ff;border-radius:10px;padding:11px 13px;margin-bottom:10px;border-left:4px solid #4f46e5}
+.info h4{color:#4f46e5;font-size:13px;margin-bottom:3px}
+.info p{color:#555;font-size:12px;line-height:1.7}
+.info b{color:#4f46e5}
+.cvs-box{border:2px solid #e8e5ff;border-radius:10px;overflow:hidden;margin-bottom:10px;background:#fefefe}
+canvas{display:block;width:100%;height:auto}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.btn{padding:7px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;transition:.2s;display:inline-flex;align-items:center;gap:3px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bp{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}
+.bp:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.35)}
+.bc{background:linear-gradient(135deg,#f43f5e,#fb7185);color:#fff}
+.bm{background:linear-gradient(135deg,#10b981,#34d399);color:#fff}
+.bs{background:#f0f0f0;color:#555}
+.bs:hover{background:#e4e4e7}
+.bo{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#fff}
+.sl-row{display:flex;align-items:center;gap:8px;margin:5px 0}
+.sl-row label{font-size:12px;color:#666;min-width:56px}
+.sl-row input[type=range]{flex:1;accent-color:#4f46e5;height:6px}
+.sl-row .v{font-weight:700;color:#4f46e5;font-size:13px;min-width:20px;text-align:center}
+.formula{background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #fbbf24;border-radius:10px;padding:12px;text-align:center;font-size:15px;font-weight:700;color:#b45309;margin:10px 0;display:none}
+.formula.show{display:block;animation:pop .35s ease}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+.tbl th{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:7px 4px}
+.tbl td{padding:6px 4px;text-align:center;border:1px solid #ede9fe}
+.tbl tr:nth-child(even){background:#f8f7ff}
+.ok{color:#10b981;font-weight:700}
+.shape-sel{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.shape-btn{padding:6px 12px;border:2px solid #e8e5ff;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;transition:.2s;font-family:inherit}
+.shape-btn.active{border-color:#4f46e5;background:#ede9fe;color:#4f46e5;font-weight:700}
+.shape-btn:hover:not(.active){border-color:#a5b4fc}
+.prog{display:flex;gap:3px;margin-bottom:10px}
+.prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#ede9fe;color:#a5a0e0;transition:.3s}
+.prog-dot.act{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;transform:scale(1.1)}
+.prog-dot.dn{background:#10b981;color:#fff}
+.quiz-opt{display:block;width:100%;padding:10px 14px;margin:5px 0;border:2px solid #e8e5ff;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;text-align:left;font-family:inherit;transition:.2s}
+.quiz-opt:hover{border-color:#a5b4fc;background:#f8f7ff}
+.quiz-opt.correct{border-color:#10b981;background:#d1fae5;font-weight:700}
+.quiz-opt.wrong{border-color:#f43f5e;background:#ffe4e6}
+.badge{display:inline-block;background:#10b981;color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;margin-left:3px}
+.stars{font-size:20px;margin:8px 0}
+.quiz-fb{padding:10px;border-radius:8px;margin:8px 0;font-size:12px;line-height:1.6;display:none}
+.quiz-fb.show{display:block}
+.quiz-fb.right{background:#d1fae5;border:1px solid #10b981;color:#065f46}
+.quiz-fb.wrg{background:#ffe4e6;border:1px solid #f43f5e;color:#9f1239}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:10px 0}
+.gallery-item{border:2px solid #e8e5ff;border-radius:8px;padding:6px;text-align:center;background:#fefefe}
+.gallery-item canvas{width:100%;border-radius:4px}
+.gallery-item p{font-size:11px;color:#666;margin-top:4px}
+.score-bar{height:8px;background:#ede9fe;border-radius:4px;overflow:hidden;margin:4px 0}
+.score-fill{height:100%;background:linear-gradient(90deg,#4f46e5,#7c3aed);border-radius:4px;transition:width .5s}
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:24px;max-width:360px;width:100%;text-align:center}
+.modal-box h3{color:#4f46e5;margin-bottom:8px}
+.modal-box p{color:#555;font-size:13px;margin-bottom:12px}
+@media(max-width:600px){.row{flex-direction:column}.btn{width:100%;justify-content:center}.nav-btn{padding:8px 10px;font-size:11px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="head">
+<h1>🔬 <span>图形探秘实验室</span></h1>
+<p>北师大版五年级上册 · 多边形面积探究学习工具</p>
+</div>
+<div class="card">
+<div class="nav">
+<button class="nav-btn active" onclick="switchPane(0)">📐 虚拟剪拼台</button>
+<button class="nav-btn" onclick="switchPane(1)">📊 数据记录板</button>
+<button class="nav-btn" onclick="switchPane(2)">🎬 动态演示厅</button>
+<button class="nav-btn" onclick="switchPane(3)">🏆 闯关挑战赛</button>
+<button class="nav-btn" onclick="switchPane(4)">🎨 创意设计坊</button>
+</div>
+
+<!-- PANE 0: 虚拟剪拼台 -->
+<div class="pane active" id="p0">
+<div class="shape-sel">
+<button class="shape-btn active" onclick="setShape(0)">▱ 平行四边形</button>
+<button class="shape-btn" onclick="setShape(1)">△ 三角形</button>
+<button class="shape-btn" onclick="setShape(2)">⏢ 梯形</button>
+</div>
+<div class="prog" id="prog0"></div>
+<div class="info" id="tip0"></div>
+<div class="cvs-box"><canvas id="c0" width="800" height="400"></canvas></div>
+<div class="row">
+<button class="btn bp" id="b0h" onclick="step0(1)">✏️ 画出高</button>
+<button class="btn bc" id="b0c" onclick="step0(2)" disabled>✂️ 沿高剪开</button>
+<button class="btn bm" id="b0m" onclick="step0(3)" disabled>➡️ 平移拼合</button>
+<button class="btn bo" id="b0r" onclick="step0(4)" disabled>🔄 旋转拼合</button>
+<button class="btn bs" onclick="resetPane0()">↺ 重置</button>
+</div>
+<div class="sl-row"><label>底：</label><input type="range" id="sB" min="3" max="8" value="6" oninput="updSliders()"><span class="v" id="vB">6</span></div>
+<div class="sl-row"><label>高：</label><input type="range" id="sH" min="2" max="6" value="4" oninput="updSliders()"><span class="v" id="vH">4</span></div>
+<div class="sl-row" id="slSkew"><label>倾斜：</label><input type="range" id="sK" min="1" max="4" value="2" oninput="updSliders()"><span class="v" id="vK">2</span></div>
+<div class="sl-row" id="slTop" style="display:none"><label>上底：</label><input type="range" id="sT" min="1" max="5" value="3" oninput="updSliders()"><span class="v" id="vT">3</span></div>
+<div class="formula" id="f0"></div>
+</div>
+
+<!-- PANE 1: 数据记录板 -->
+<div class="pane" id="p1">
+<div class="info"><h4>📊 数据记录板</h4><p>在"虚拟剪拼台"完成一次完整剪拼后，结果会<b>自动记录</b>到这里！收集3组以上不同数据后，观察<b>底、高与面积</b>之间的关系，你能发现什么规律？</p></div>
+<table class="tbl"><thead><tr><th>#</th><th>图形</th><th>底</th><th>高</th><th>底×高</th><th>转化后面积</th><th>验证</th></tr></thead><tbody id="dtb"></tbody></table>
+<div class="row">
+<button class="btn bp" onclick="addRecord()">✋ 手动补录当前数据</button>
+<button class="btn bs" onclick="clearRecords()">🗑️ 清空</button>
+</div>
+<div class="formula" id="f1"><span id="f1txt"></span></div>
+<div class="cvs-box" style="height:180px"><canvas id="c1" width="800" height="180"></canvas></div>
+</div>
+
+<!-- PANE 2: 动态演示厅 -->
+<div class="pane" id="p2">
+<div class="info"><h4>🎬 动态演示厅</h4><p>选择图形类型，观看完整的转化过程动画。注意观察：转化前后，<b>什么变了？什么没变？</b></p></div>
+<div class="shape-sel">
+<button class="shape-btn active" onclick="setDemo(0)">▱ 平行四边形→长方形</button>
+<button class="shape-btn" onclick="setDemo(1)">△ 三角形→平行四边形</button>
+<button class="shape-btn" onclick="setDemo(2)">⏢ 梯形→平行四边形</button>
+</div>
+<div class="cvs-box"><canvas id="c2" width="800" height="400"></canvas></div>
+<div class="row">
+<button class="btn bp" id="b2play" onclick="playDemo()">▶️ 播放</button>
+<button class="btn bs" onclick="pauseDemo()">⏸️ 暂停</button>
+<button class="btn bs" onclick="resetDemo()">↺ 重置</button>
+</div>
+<div class="info" id="demoInfo"><p id="demoTxt">点击"播放"观看转化过程动画</p></div>
+</div>
+
+<!-- PANE 3: 闯关挑战赛 -->
+<div class="pane" id="p3">
+<div class="info"><h4>🏆 闯关挑战赛</h4><p>题目<b>每轮随机生成，永不重复</b>！运用所学面积公式计算图形面积。答对即可晋级！当前进度：</p></div>
+<div class="score-bar"><div class="score-fill" id="qBar" style="width:0%"></div></div>
+<p style="font-size:12px;color:#888;margin-bottom:10px" id="qProg">第 1 关 / 共 8 关</p>
+<div class="cvs-box" style="height:200px"><canvas id="c3" width="800" height="200"></canvas></div>
+<p style="font-size:14px;font-weight:700;color:#333;margin:8px 0" id="qText"></p>
+<div id="qOpts"></div>
+<div class="quiz-fb" id="qFb"></div>
+<div class="row" style="margin-top:8px">
+<button class="btn bp" id="qNext" onclick="nextQ()" disabled>下一关 →</button>
+</div>
+</div>
+
+<!-- PANE 4: 创意设计坊 -->
+<div class="pane" id="p4">
+<div class="info"><h4>🎨 创意设计坊</h4><p>先用下面的滑块<b>设置图形大小</b>，再点击按钮添加，然后<b>用鼠标或手指按住图形拖动</b>调整位置，创作几何艺术作品！（"上底"滑块仅梯形使用）系统会自动计算总面积。</p></div>
+<div class="sl-row"><label>底：</label><input type="range" id="cB" min="2" max="9" value="4" oninput="updCreativeSliders()"><span class="v" id="cvB">4</span></div>
+<div class="sl-row"><label>高：</label><input type="range" id="cH" min="2" max="7" value="3" oninput="updCreativeSliders()"><span class="v" id="cvH">3</span></div>
+<div class="sl-row"><label>上底：</label><input type="range" id="cT" min="1" max="6" value="2" oninput="updCreativeSliders()"><span class="v" id="cvT">2</span></div>
+<div class="cvs-box"><canvas id="c4" width="800" height="400" style="cursor:grab;touch-action:none"></canvas></div>
+<div class="row">
+<button class="btn bp" onclick="addCreativeShape(0)">➕ 平行四边形</button>
+<button class="btn bc" onclick="addCreativeShape(1)">➕ 三角形</button>
+<button class="btn bm" onclick="addCreativeShape(2)">➕ 梯形</button>
+<button class="btn bo" onclick="addCreativeShape(3)">➕ 长方形</button>
+<button class="btn bs" onclick="clearCreative()">🗑️ 清空</button>
+</div>
+<p style="font-size:13px;margin:8px 0;color:#333">🧮 作品总面积：<b style="color:#4f46e5;font-size:16px" id="totalArea">0</b> 平方格</p>
+<div class="gallery" id="gallery"></div>
+</div>
+</div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h3 id="mTitle">🎉</h3>
+<p id="mText"></p>
+<button class="btn bp" onclick="closeModal()">好的</button>
+</div>
+</div>
+
+<script>
+// ===== CONSTANTS =====
+const G=40;
+let curShape=0, curStep=0, animProg=0, animId=null;
+let base=6, ht=4, skew=2, topB=3;
+let records=[], recId=0;
+let demoType=0, demoAnim=null, demoProg=0, demoPaused=false;
+let quizSet=[], quizIdx=0, quizScore=0, answered=false, quizTotal=8;
+let creativeShapes=[];
+
+// ===== UTILITY =====
+function $(id){return document.getElementById(id)}
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function switchPane(n){
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.toggle('active',i===n)});
+  document.querySelectorAll('.pane').forEach((p,i)=>{p.classList.toggle('active',i===n)});
+  if(n===0)drawPane0();
+  if(n===1)drawChart();
+  if(n===2)resetDemo();
+  if(n===3)renderQuiz();
+  if(n===4)drawCreative();
+}
+function showModal(t,m){$('mTitle').textContent=t;$('mText').textContent=m;$('modal').classList.add('show')}
+function closeModal(){$('modal').classList.remove('show')}
+function toast(msg){
+  let t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10b981;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:1000;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;transition:opacity .3s';
+  document.body.appendChild(t);
+  requestAnimationFrame(()=>t.style.opacity='1');
+  setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},1900);
+}
+
+// ===== PANE 0: CUTTING TABLE =====
+const shapeNames=['平行四边形','三角形','梯形'];
+const steps0=[
+  ['观察图形','画出高','沿高剪开','平移拼合'],
+  ['观察图形','画出高','复制旋转','拼合为平行四边形'],
+  ['观察图形','画中线','剪开旋转','拼合为平行四边形']
+];
+const tips0=[
+  ['网格中有一个<b>平行四边形</b>。调整滑块改变形状。想一想：怎样算出它的面积？',
+   '红色虚线是平行四边形的<b style="color:#f43f5e">高</b>——从顶点到底边的垂直距离。接下来沿高剪开！',
+   '✂️ 剪开了！左边分出一个<b style="color:#f43f5e">直角三角形</b>。把它平移到右边去！',
+   '🎉 拼好了！变成了<b style="color:#10b981">长方形</b>！长=底，宽=高，面积不变！'],
+  ['网格中有一个<b>三角形</b>。想一想：怎样把它转化为已知图形来算面积？',
+   '画出三角形的<b style="color:#f43f5e">高</b>。接下来我们用"复制旋转"的方法。',
+   '复制一个完全相同的三角形，旋转180°……',
+   '🎉 两个三角形拼成了一个<b style="color:#10b981">平行四边形</b>！三角形面积=平行四边形面积÷2=底×高÷2！'],
+  ['网格中有一个<b>梯形</b>。想一想：怎样转化为已知图形？',
+   '找到梯形两腰的<b style="color:#f43f5e">中点</b>，画出中位线。',
+   '沿中位线剪开，将下半部分旋转180°……',
+   '🎉 拼成了一个<b style="color:#10b981">长方形</b>！长=(上底+下底)÷2，宽=高。梯形面积=(上底+下底)×高÷2！']
+];
+
+function setShape(n){
+  curShape=n;
+  document.querySelectorAll('#p0 .shape-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  $('slSkew').style.display=n===0?'flex':'none';
+  $('slTop').style.display=n===2?'flex':'none';
+  if(n===1){$('b0m').textContent='🔄 复制旋转';$('b0r').style.display='none';}
+  else if(n===2){$('b0m').textContent='🔄 剪开旋转';$('b0r').style.display='none';}
+  else{$('b0m').textContent='➡️ 平移拼合';$('b0r').style.display='none';}
+  resetPane0();
+}
+
+function resetPane0(){
+  if(animId){cancelAnimationFrame(animId);animId=null;}
+  curStep=0;animProg=0;
+  $('b0c').disabled=true;$('b0m').disabled=true;$('b0r').disabled=true;
+  $('f0').classList.remove('show');
+  renderProg();renderTip();drawPane0();
+}
+
+function renderProg(){
+  let html='';
+  for(let i=0;i<4;i++){
+    let cls=i<curStep?'dn':i===curStep?'act':'';
+    html+=`<div class="prog-dot ${cls}">${i+1}</div>`;
+  }
+  $('prog0').innerHTML=html;
+}
+function renderTip(){
+  $('tip0').innerHTML=`<h4>📌 第${curStep+1}步：${steps0[curShape][curStep]}</h4><p>${tips0[curShape][curStep]}</p>`;
+}
+
+function step0(target){
+  if(curStep>=target-1){
+    curStep=target;
+    if(target===1){$('b0c').disabled=false;}
+    if(target===2){$('b0m').disabled=false;}
+    if(target===3){
+      animProg=0;
+      function anim(){
+        animProg+=0.02;
+        if(animProg>=1){animProg=1;drawPane0();showFormula0();renderProg();renderTip();autoRecord();return;}
+        drawPane0();animId=requestAnimationFrame(anim);
+      }
+      anim();
+      curStep=3;
+    }
+    renderProg();renderTip();drawPane0();
+  }
+}
+
+function updSliders(){
+  base=+$('sB').value;ht=+$('sH').value;skew=+$('sK').value;topB=+$('sT').value;
+  $('vB').textContent=base;$('vH').textContent=ht;$('vK').textContent=skew;$('vT').textContent=topB;
+  resetPane0();
+}
+
+function drawPane0(){
+  let c=$('c0'),x=c.getContext('2d');c.width=800;c.height=400;
+  drawGrid(x,800,400);
+  if(curShape===0)drawPara0(x);
+  else if(curShape===1)drawTri0(x);
+  else drawTrap0(x);
+}
+
+function drawGrid(x,w,h){
+  x.strokeStyle='#f0f0f0';x.lineWidth=.5;
+  for(let i=0;i<=w;i+=G){x.beginPath();x.moveTo(i,0);x.lineTo(i,h);x.stroke();}
+  for(let i=0;i<=h;i+=G){x.beginPath();x.moveTo(0,i);x.lineTo(w,i);x.stroke();}
+}
+
+function drawPara0(x){
+  let sx=80,sy=320;
+  let A={x:sx,y:sy},B={x:sx+base*G,y:sy},D={x:sx+skew*G,y:sy-ht*G},C={x:sx+(base+skew)*G,y:sy-ht*G},E={x:sx+skew*G,y:sy};
+
+  if(curStep===0){
+    fillPoly(x,[A,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+  }else if(curStep===1){
+    fillPoly(x,[A,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    drawDash(x,E,D,'#f43f5e');
+    drawRA(x,E.x,E.y,10);
+    lbl(x,'高='+ht,E.x-20,(E.y+D.y)/2,'#f43f5e');
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+  }else if(curStep===2){
+    fillPoly(x,[E,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    let off=-6;
+    fillPoly(x,[{x:A.x+off,y:A.y},{x:E.x+off,y:E.y},{x:D.x+off,y:D.y}],'rgba(244,63,94,.12)','#f43f5e');
+    drawDash(x,E,D,'#fbbf24');
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+    lbl(x,'高='+ht,E.x-20,(E.y+D.y)/2,'#f43f5e');
+  }else{
+    let dx=base*G*animProg;
+    fillPoly(x,[E,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    fillPoly(x,[{x:A.x+dx,y:A.y},{x:E.x+dx,y:E.y},{x:D.x+dx,y:D.y}],'rgba(244,63,94,.12)','#f43f5e');
+    if(animProg>=1){
+      x.strokeStyle='#10b981';x.lineWidth=3;x.strokeRect(E.x,D.y,base*G,ht*G);
+      x.fillStyle='rgba(16,185,129,.06)';x.fillRect(E.x,D.y,base*G,ht*G);
+      lbl(x,'长=底='+base,E.x+base*G/2,A.y+20,'#10b981');
+      lbl(x,'宽=高='+ht,E.x+base*G+16,(E.y+D.y)/2,'#10b981');
+    }
+    drawDash(x,E,D,'#f43f5e');
+    lbl(x,'高='+ht,E.x-20,(E.y+D.y)/2,'#f43f5e');
+  }
+}
+
+function drawTri0(x){
+  let sx=120,sy=320;
+  let A={x:sx,y:sy},B={x:sx+base*G,y:sy},C={x:sx+Math.floor(base/2)*G,y:sy-ht*G};
+  let foot={x:C.x,y:sy};
+
+  if(curStep===0){
+    fillPoly(x,[A,B,C],'rgba(79,70,229,.1)','#4f46e5');
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+  }else if(curStep===1){
+    fillPoly(x,[A,B,C],'rgba(79,70,229,.1)','#4f46e5');
+    drawDash(x,foot,C,'#f43f5e');drawRA(x,foot.x,foot.y,10);
+    lbl(x,'高='+ht,foot.x-20,(foot.y+C.y)/2,'#f43f5e');
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+  }else if(curStep===2){
+    fillPoly(x,[A,B,C],'rgba(79,70,229,.1)','#4f46e5');
+    let p=Math.min(animProg*2,1);
+    let cx2=(A.x+B.x+C.x)/3,cy2=(A.y+B.y+C.y)/3;
+    x.save();x.globalAlpha=.4+.6*p;
+    x.translate(cx2,cy2);x.rotate(Math.PI*p);x.translate(-cx2,-cy2);
+    fillPoly(x,[A,B,C],'rgba(244,63,94,.12)','#f43f5e');
+    x.restore();
+    drawDash(x,foot,C,'#f43f5e');
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+  }else{
+    fillPoly(x,[A,B,C],'rgba(79,70,229,.1)','#4f46e5');
+    let midBCx=(B.x+C.x)/2, midBCy=(B.y+C.y)/2;
+    let A2r={x:2*midBCx-A.x,y:2*midBCy-A.y};
+    fillPoly(x,[B,C,A2r],'rgba(244,63,94,.12)','#f43f5e');
+    x.setLineDash([4,3]);x.strokeStyle='#10b981';x.lineWidth=2;
+    x.beginPath();x.moveTo(A.x,A.y);x.lineTo(B.x,B.y);x.lineTo(A2r.x,A2r.y);x.lineTo(C.x,C.y);x.closePath();x.stroke();
+    x.setLineDash([]);
+    lbl(x,'底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+    lbl(x,'高='+ht,foot.x+20,(foot.y+C.y)/2,'#f43f5e');
+    lbl(x,'平行四边形面积=底×高='+base*ht,400,sy+20,'#10b981');
+    lbl(x,'三角形='+base*ht+'÷2='+(base*ht/2),400,sy+40,'#b45309');
+  }
+}
+
+function drawTrap0(x){
+  let sx=100,sy=320;
+  let A={x:sx,y:sy},B={x:sx+base*G,y:sy};
+  let D={x:sx+G,y:sy-ht*G},C={x:sx+G+topB*G,y:sy-ht*G};
+  let midL={x:(A.x+D.x)/2,y:(A.y+D.y)/2},midR={x:(B.x+C.x)/2,y:(B.y+C.y)/2};
+
+  if(curStep===0){
+    fillPoly(x,[A,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    lbl(x,'下底='+base,(A.x+B.x)/2,A.y+20,'#4f46e5');
+    lbl(x,'上底='+topB,(D.x+C.x)/2,D.y-12,'#4f46e5');
+  }else if(curStep===1){
+    fillPoly(x,[A,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    drawDash(x,midL,midR,'#f43f5e');
+    lbl(x,'中位线（高的一半处）',sx+base*G/2,midL.y-12,'#f43f5e');
+    lbl(x,'高='+ht,sx-20,(A.y+D.y)/2,'#888');
+  }else if(curStep===2||curStep===3){
+    let p=curStep===2?animProg:1;
+    let uA=midL,uB=midR,uC=C,uD=D;
+    fillPoly(x,[uA,uB,uC,uD],'rgba(79,70,229,.1)','#4f46e5');
+    let lA=A,lB=B,lC=midR,lD=midL;
+    x.save();
+    x.translate(midR.x,midR.y);x.rotate(Math.PI*p);x.translate(-midR.x,-midR.y);
+    fillPoly(x,[lA,lB,lC,lD],'rgba(244,63,94,.12)','#f43f5e');
+    x.restore();
+    if(p>=1){
+      let area=(base+topB)*ht/2;
+      lbl(x,'面积=(上底+下底)×高÷2=('+topB+'+'+base+')×'+ht+'÷2='+area,400,sy+20,'#10b981');
+    }
+  }
+}
+
+function showFormula0(){
+  let txt='',area;
+  if(curShape===0){area=base*ht;txt=`平行四边形面积 = 底 × 高 = ${base} × ${ht} = <b style="font-size:18px">${area}</b>（平方格）`;}
+  else if(curShape===1){area=base*ht/2;txt=`三角形面积 = 底 × 高 ÷ 2 = ${base} × ${ht} ÷ 2 = <b style="font-size:18px">${area}</b>（平方格）`;}
+  else{area=(topB+base)*ht/2;txt=`梯形面积 = (上底+下底)×高÷2 = (${topB}+${base})×${ht}÷2 = <b style="font-size:18px">${area}</b>（平方格）`;}
+  $('f0').innerHTML=txt;$('f0').classList.add('show');
+}
+
+// Drawing helpers
+function fillPoly(x,pts,fill,stroke){
+  x.beginPath();x.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++)x.lineTo(pts[i].x,pts[i].y);
+  x.closePath();x.fillStyle=fill;x.fill();x.strokeStyle=stroke;x.lineWidth=2.5;x.stroke();
+}
+function drawDash(x,a,b,c){
+  x.setLineDash([6,4]);x.strokeStyle=c;x.lineWidth=2;
+  x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();x.setLineDash([]);
+}
+function drawRA(x,px,py,s){
+  x.strokeStyle='#f43f5e';x.lineWidth=1.5;
+  x.beginPath();x.moveTo(px+s,py);x.lineTo(px+s,py-s);x.lineTo(px,py-s);x.stroke();
+}
+function lbl(x,t,px,py,c){x.fillStyle=c;x.font='bold 12px sans-serif';x.textAlign='center';x.fillText(t,px,py);}
+
+// ===== PANE 1: DATA RECORDS =====
+function recordCurrent(){
+  if(curStep<3||animProg<1) return false;
+  let area,name=shapeNames[curShape];
+  if(curShape===0)area=base*ht;
+  else if(curShape===1)area=base*ht/2;
+  else area=(topB+base)*ht/2;
+  let key=curShape+'|'+base+'|'+ht+'|'+(curShape===2?topB:0);
+  if(records.some(r=>r.key===key)) return false; // 同一组数据不重复记录
+  recId++;
+  let formula=curShape===0?base+'×'+ht:curShape===1?base+'×'+ht+'÷2':'('+topB+'+'+base+')×'+ht+'÷2';
+  records.push({id:recId,key,name,b:base,h:ht,formula,area,area2:area});
+  renderRecords();
+  return true;
+}
+function autoRecord(){ if(recordCurrent()) toast('📊 已自动记录到数据记录板！'); }
+function addRecord(){
+  if(curStep<3||animProg<1){showModal('⚠️ 提示','请先在"虚拟剪拼台"完成一次完整的剪拼探究再记录数据哦！');return;}
+  if(!recordCurrent()) showModal('ℹ️ 提示','这组数据（图形+底+高）已经记录过啦，换个尺寸再试试吧！');
+}
+function clearRecords(){records=[];recId=0;renderRecords();$('f1').classList.remove('show');}
+function renderRecords(){
+  let tb=$('dtb');tb.innerHTML='';
+  records.forEach(r=>{
+    tb.innerHTML+=`<tr><td>${r.id}</td><td>${r.name}</td><td>${r.b}</td><td>${r.h}</td><td>${r.formula}=${r.area}</td><td>${r.area2}</td><td class="ok">✅</td></tr>`;
+  });
+  if(records.length>=3){
+    $('f1').classList.add('show');
+    let types=[...new Set(records.map(r=>r.name))];
+    let txt='🎉 发现规律：<br>';
+    if(types.includes('平行四边形'))txt+='<b>平行四边形面积 = 底 × 高</b><br>';
+    if(types.includes('三角形'))txt+='<b>三角形面积 = 底 × 高 ÷ 2</b><br>';
+    if(types.includes('梯形'))txt+='<b>梯形面积 = (上底+下底) × 高 ÷ 2</b>';
+    $('f1').innerHTML=txt;
+  }else{
+    $('f1').classList.remove('show');
+  }
+  drawChart();
+}
+function drawChart(){
+  let c=$('c1'),x=c.getContext('2d');c.width=800;c.height=180;
+  if(records.length===0){x.fillStyle='#aaa';x.font='13px sans-serif';x.textAlign='center';x.fillText('暂无数据，请先到"虚拟剪拼台"完成剪拼探究（将自动记录）',400,90);return;}
+  let maxA=Math.max(...records.map(r=>r.area),1);
+  let bw=Math.min(50,700/records.length-10),startX=60;
+  x.fillStyle='#555';x.font='11px sans-serif';x.textAlign='center';
+  records.forEach((r,i)=>{
+    let bh=r.area/maxA*130;
+    let px=startX+i*(bw+10);
+    let grad=x.createLinearGradient(px,160-bh,px,160);
+    grad.addColorStop(0,'#4f46e5');grad.addColorStop(1,'#a78bfa');
+    x.fillStyle=grad;
+    x.fillRect(px,160-bh,bw,bh);
+    x.fillStyle='#333';x.fillText(r.area,px+bw/2,155-bh);
+    x.fillStyle='#888';x.fillText('#'+r.id,px+bw/2,174);
+  });
+}
+
+// ===== PANE 2: DEMO =====
+function setDemo(n){
+  demoType=n;
+  document.querySelectorAll('#p2 .shape-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  resetDemo();
+}
+function resetDemo(){
+  if(demoAnim){cancelAnimationFrame(demoAnim);demoAnim=null;}
+  demoProg=0;demoPaused=false;
+  let c=$('c2'),x=c.getContext('2d');c.width=800;c.height=400;
+  drawGrid(x,800,400);
+  drawDemoFrame(x,0,0);
+  $('demoTxt').textContent='点击"播放"观看转化过程动画';
+}
+function playDemo(){
+  if(demoPaused){demoPaused=false;runDemo();return;}
+  demoProg=0;demoPaused=false;runDemo();
+}
+function pauseDemo(){demoPaused=true;if(demoAnim){cancelAnimationFrame(demoAnim);demoAnim=null;}}
+function runDemo(){
+  if(demoPaused)return;
+  let c=$('c2'),x=c.getContext('2d');
+  function frame(){
+    if(demoPaused)return;
+    demoProg+=0.005;
+    if(demoProg>1.5)demoProg=1.5;
+    c.width=800;c.height=400;
+    drawGrid(x,800,400);
+    let phase=demoProg<0.3?0:demoProg<0.6?1:2;
+    let local=phase===0?demoProg/0.3:phase===1?(demoProg-0.3)/0.3:(demoProg-0.6)/0.9;
+    drawDemoFrame(x,phase,Math.min(local,1));
+    updateDemoText(phase,local);
+    if(demoProg<1.5)demoAnim=requestAnimationFrame(frame);
+    else{demoAnim=null;$('demoTxt').innerHTML='✅ <b>演示完成！</b>转化前后面积不变，形状改变了但面积守恒。';}
+  }
+  frame();
+}
+function drawDemoFrame(x,phase,p){
+  let sx=100,sy=320;
+  if(demoType===0){
+    // Parallelogram → Rectangle
+    let A={x:sx,y:sy},B={x:sx+6*G,y:sy},D={x:sx+2*G,y:sy-4*G},C={x:sx+8*G,y:sy-4*G},E={x:sx+2*G,y:sy};
+    if(phase===0){
+      fillPoly(x,[A,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+      if(p>0.5){drawDash(x,E,D,'#f43f5e');drawRA(x,E.x,E.y,8);}
+    }else if(phase===1){
+      fillPoly(x,[E,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+      let off=-8*p;
+      fillPoly(x,[{x:A.x+off,y:A.y},{x:E.x+off,y:E.y},{x:D.x+off,y:D.y}],'rgba(244,63,94,.12)','#f43f5e');
+      drawDash(x,E,D,'#fbbf24');
+    }else{
+      fillPoly(x,[E,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+      let dx=6*G*p;
+      fillPoly(x,[{x:A.x+dx,y:A.y},{x:E.x+dx,y:E.y},{x:D.x+dx,y:D.y}],'rgba(244,63,94,.12)','#f43f5e');
+      if(p>=1){x.strokeStyle='#10b981';x.lineWidth=3;x.strokeRect(E.x,D.y,6*G,4*G);lbl(x,'✅ 长方形：6×4=24',E.x+3*G,D.y-12,'#10b981');}
+    }
+    lbl(x,'底=6',(A.x+B.x)/2,A.y+18,'#4f46e5');
+  }else if(demoType===1){
+    // Triangle → Parallelogram (duplicate+rotate)
+    let A={x:sx,y:sy},B={x:sx+6*G,y:sy},C={x:sx+3*G,y:sy-4*G};
+    fillPoly(x,[A,B,C],'rgba(79,70,229,.1)','#4f46e5');
+    if(phase>=1){
+      let midBCx=(B.x+C.x)/2,midBCy=(B.y+C.y)/2;
+      let rot=Math.PI*(phase===1?p:1);
+      x.save();x.translate(midBCx,midBCy);x.rotate(rot);x.translate(-midBCx,-midBCy);
+      fillPoly(x,[A,B,C],'rgba(244,63,94,.12)','#f43f5e');
+      x.restore();
+      if(phase===2&&p>=1){
+        let A2={x:2*midBCx-A.x,y:2*midBCy-A.y};
+        x.setLineDash([4,3]);x.strokeStyle='#10b981';x.lineWidth=2;
+        x.beginPath();x.moveTo(A.x,A.y);x.lineTo(B.x,B.y);x.lineTo(A2.x,A2.y);x.lineTo(C.x,C.y);x.closePath();x.stroke();x.setLineDash([]);
+        lbl(x,'✅ 三角形面积=6×4÷2=12',400,sy+20,'#10b981');
+      }
+    }
+    lbl(x,'底=6',(A.x+B.x)/2,A.y+18,'#4f46e5');
+  }else{
+    // Trapezoid → 复制并绕"右腰中点"旋转180°，向右展开成平行四边形
+    let A={x:sx,y:sy},B={x:sx+6*G,y:sy},C={x:sx+4*G,y:sy-4*G},D={x:sx+G,y:sy-4*G};
+    fillPoly(x,[A,B,C,D],'rgba(79,70,229,.1)','#4f46e5');
+    if(phase>=1){
+      let midBCx=(B.x+C.x)/2,midBCy=(B.y+C.y)/2;
+      let rot=Math.PI*(phase===1?p:1);
+      x.save();x.translate(midBCx,midBCy);x.rotate(rot);x.translate(-midBCx,-midBCy);
+      fillPoly(x,[A,B,C,D],'rgba(244,63,94,.12)','#f43f5e');
+      x.restore();
+      if(phase===2&&p>=1){
+        let A2={x:2*midBCx-A.x,y:2*midBCy-A.y},D2={x:2*midBCx-D.x,y:2*midBCy-D.y};
+        x.setLineDash([4,3]);x.strokeStyle='#10b981';x.lineWidth=2;
+        x.beginPath();x.moveTo(A.x,A.y);x.lineTo(D2.x,D2.y);x.lineTo(A2.x,A2.y);x.lineTo(D.x,D.y);x.closePath();x.stroke();x.setLineDash([]);
+        lbl(x,'✅ 梯形面积=(3+6)×4÷2=18',400,sy+24,'#10b981');
+      }
+    }
+    lbl(x,'下底=6',(A.x+B.x)/2,A.y+18,'#4f46e5');
+    lbl(x,'上底=3',(D.x+C.x)/2,D.y-12,'#4f46e5');
+  }
+}
+function updateDemoText(phase,p){
+  let msgs=[
+    ['🔍 观察图形，找到底和高...','✏️ 画出高，准备进行转化...','➡️ 正在平移/旋转拼合...'],
+    ['🔍 观察三角形...','🔄 复制并旋转180°...','✅ 两个三角形拼成平行四边形！'],
+    ['🔍 观察梯形...','🔄 复制并绕右腰中点旋转180°...','✅ 两个梯形拼成平行四边形！']
+  ];
+  $('demoTxt').textContent=msgs[demoType][phase];
+}
+
+// ===== PANE 3: QUIZ (随机生成) =====
+function makeQuestion(){
+  let kind=randInt(0,6);
+  let shape,b,h,t=null,unknown=null,qtext,cv,unit,ds,explain;
+
+  if(kind===0){ // 平行四边形面积
+    shape='para'; b=randInt(3,12); h=randInt(2,9); unit='cm²'; cv=b*h;
+    qtext=`平行四边形：底=${b}cm，高=${h}cm，它的面积=？`;
+    ds=[b+h, 2*(b+h), b*h+b];
+    explain=`平行四边形面积 = 底 × 高 = ${b} × ${h} = ${cv}cm²`;
+  }else if(kind===1){ // 三角形面积
+    shape='tri'; b=randInt(2,6)*2; h=randInt(2,9); unit='cm²'; cv=b*h/2;
+    qtext=`三角形：底=${b}cm，高=${h}cm，它的面积=？`;
+    ds=[b*h, b+h, b*h/2+b];
+    explain=`三角形面积 = 底 × 高 ÷ 2 = ${b} × ${h} ÷ 2 = ${cv}cm²`;
+  }else if(kind===2){ // 梯形面积
+    shape='trap'; b=randInt(5,12); t=randInt(2,b-1); h=randInt(2,7);
+    if((t+b)%2!==0 && h%2!==0) h++;
+    unit='cm²'; cv=(t+b)*h/2;
+    qtext=`梯形：上底=${t}cm，下底=${b}cm，高=${h}cm，它的面积=？`;
+    ds=[(t+b)*h, b*h, t*h];
+    explain=`梯形面积 = (上底+下底) × 高 ÷ 2 = (${t}+${b}) × ${h} ÷ 2 = ${cv}cm²`;
+  }else if(kind===3){ // 平行四边形：已知面积求高
+    shape='para'; b=randInt(3,12); h=randInt(2,9); let area=b*h; unknown='h'; unit='cm'; cv=h;
+    qtext=`一个平行四边形的面积是${area}cm²，底是${b}cm，高是多少？`;
+    ds=[area-b, area, b];
+    explain=`高 = 面积 ÷ 底 = ${area} ÷ ${b} = ${h}cm`;
+  }else if(kind===4){ // 三角形：已知面积求高
+    shape='tri'; b=randInt(2,6)*2; h=randInt(2,9); let area=b*h/2; unknown='h'; unit='cm'; cv=h;
+    qtext=`一个三角形的面积是${area}cm²，底是${b}cm，高是多少？`;
+    ds=[area/b, area, b];
+    explain=`高 = 面积 × 2 ÷ 底 = ${area} × 2 ÷ ${b} = ${h}cm`;
+  }else if(kind===5){ // 组合图形：长方形+三角形
+    shape='combo'; b=randInt(2,5)*2; h=randInt(3,6); t=randInt(2,5); unit='cm²'; cv=b*h+b*t/2;
+    qtext=`组合图形：一个长方形(长${b}cm，宽${h}cm)，上面拼一个三角形(底${b}cm，高${t}cm)，总面积=？`;
+    ds=[b*h+b*t, b*h, b*h+b+t];
+    explain=`长方形 + 三角形 = ${b}×${h} + ${b}×${t}÷2 = ${b*h} + ${b*t/2} = ${cv}cm²`;
+  }else{ // 三角形：已知面积求底
+    shape='tri'; b=randInt(2,6)*2; h=randInt(2,8); let area=b*h/2; unknown='b'; unit='cm'; cv=b;
+    qtext=`一个三角形的面积是${area}cm²，高是${h}cm，底是多少？`;
+    ds=[area/h, area, h];
+    explain=`底 = 面积 × 2 ÷ 高 = ${area} × 2 ÷ ${h} = ${b}cm`;
+  }
+
+  // 组装四个选项（去重、补足、打乱）
+  let vals=[cv];
+  for(let d of ds){
+    d=Math.round(d*100)/100;
+    if(d>0 && !vals.includes(d)) vals.push(d);
+    if(vals.length>=4) break;
+  }
+  let pad=1;
+  while(vals.length<4){
+    let cand=Math.round((cv+pad)*100)/100;
+    if(cand>0 && !vals.includes(cand)) vals.push(cand);
+    pad++;
+  }
+  for(let i=vals.length-1;i>0;i--){let j=randInt(0,i);[vals[i],vals[j]]=[vals[j],vals[i]];}
+  let opts=vals.map(v=>v+unit);
+  let ans=vals.indexOf(cv);
+
+  return {q:qtext,opts,ans,shape,b,h,t,unknown,explain};
+}
+
+function startQuizRound(){
+  quizSet=[];
+  for(let i=0;i<quizTotal;i++) quizSet.push(makeQuestion());
+  quizIdx=0; quizScore=0;
+}
+
+function renderQuiz(){
+  if(quizSet.length===0) startQuizRound();
+  let q=quizSet[quizIdx];
+  $('qText').textContent=q.q;
+  $('qProg').textContent=`第 ${quizIdx+1} 关 / 共 ${quizSet.length} 关`;
+  $('qBar').style.width=(quizIdx/quizSet.length*100)+'%';
+  $('qFb').classList.remove('show');$('qFb').className='quiz-fb';
+  $('qNext').disabled=true;
+  answered=false;
+  let html='';
+  q.opts.forEach((o,i)=>{html+=`<button class="quiz-opt" onclick="answerQ(${i})">${String.fromCharCode(65+i)}. ${o}</button>`;});
+  $('qOpts').innerHTML=html;
+  drawQuizShape(q);
+}
+function drawQuizShape(q){
+  let c=$('c3'),x=c.getContext('2d');c.width=800;c.height=200;
+  drawGrid(x,800,200);
+  let vExtent = q.shape==='combo' ? (q.h+q.t) : q.h;
+  let hExtent = q.b + (q.shape==='para'?2:0);
+  let sc=Math.min(20, Math.floor(140/Math.max(vExtent,1)), Math.floor(440/Math.max(hExtent,1)));
+  sc=Math.max(8,sc);
+  let sy=170, sx=Math.round((800-hExtent*sc)/2);
+  x.fillStyle='rgba(79,70,229,.1)';x.strokeStyle='#4f46e5';x.lineWidth=2.5;
+
+  let hLabel=(q.unknown==='h')?'高=?':'高='+q.h+'cm';
+  let bLabel=(q.unknown==='b')?'底=?':'底='+q.b+'cm';
+
+  if(q.shape==='para'){
+    let sk=2;
+    x.beginPath();x.moveTo(sx,sy);x.lineTo(sx+q.b*sc,sy);x.lineTo(sx+(q.b+sk)*sc,sy-q.h*sc);x.lineTo(sx+sk*sc,sy-q.h*sc);x.closePath();x.fill();x.stroke();
+    lbl(x,bLabel,sx+q.b*sc/2,sy+16,'#4f46e5');
+    drawDash(x,{x:sx+sk*sc,y:sy},{x:sx+sk*sc,y:sy-q.h*sc},'#f43f5e');
+    lbl(x,hLabel,sx+sk*sc-26,sy-q.h*sc/2,'#f43f5e');
+  }else if(q.shape==='tri'){
+    x.beginPath();x.moveTo(sx,sy);x.lineTo(sx+q.b*sc,sy);x.lineTo(sx+q.b*sc/2,sy-q.h*sc);x.closePath();x.fill();x.stroke();
+    lbl(x,bLabel,sx+q.b*sc/2,sy+16,'#4f46e5');
+    drawDash(x,{x:sx+q.b*sc/2,y:sy},{x:sx+q.b*sc/2,y:sy-q.h*sc},'#f43f5e');
+    lbl(x,hLabel,sx+q.b*sc/2+24,sy-q.h*sc/2,'#f43f5e');
+  }else if(q.shape==='trap'){
+    let off=Math.max(1,Math.round((q.b-q.t)/2));
+    x.beginPath();x.moveTo(sx,sy);x.lineTo(sx+q.b*sc,sy);x.lineTo(sx+(off+q.t)*sc,sy-q.h*sc);x.lineTo(sx+off*sc,sy-q.h*sc);x.closePath();x.fill();x.stroke();
+    lbl(x,'下底='+q.b+'cm',sx+q.b*sc/2,sy+16,'#4f46e5');
+    lbl(x,'上底='+q.t+'cm',sx+(off+q.t/2)*sc,sy-q.h*sc-8,'#4f46e5');
+    drawDash(x,{x:sx+off*sc,y:sy},{x:sx+off*sc,y:sy-q.h*sc},'#f43f5e');
+    lbl(x,'高='+q.h+'cm',sx+off*sc-26,sy-q.h*sc/2,'#f43f5e');
+  }else{ // combo
+    x.fillRect(sx,sy-q.h*sc,q.b*sc,q.h*sc);x.strokeRect(sx,sy-q.h*sc,q.b*sc,q.h*sc);
+    x.beginPath();x.moveTo(sx,sy-q.h*sc);x.lineTo(sx+q.b*sc,sy-q.h*sc);x.lineTo(sx+q.b*sc/2,sy-(q.h+q.t)*sc);x.closePath();x.fill();x.stroke();
+    lbl(x,'长'+q.b+'cm',sx+q.b*sc/2,sy+16,'#4f46e5');
+    lbl(x,'宽'+q.h+'cm',sx-20,sy-q.h*sc/2,'#4f46e5');
+    lbl(x,'高'+q.t+'cm',sx+q.b*sc+22,sy-(q.h+q.t/2)*sc,'#f43f5e');
+  }
+}
+function answerQ(i){
+  if(answered)return;answered=true;
+  let q=quizSet[quizIdx];
+  let btns=$('qOpts').querySelectorAll('.quiz-opt');
+  if(i===q.ans){
+    btns[i].classList.add('correct');
+    quizScore++;
+    $('qFb').className='quiz-fb right show';
+    $('qFb').innerHTML='✅ <b>回答正确！</b> 太棒了！';
+  }else{
+    btns[i].classList.add('wrong');btns[q.ans].classList.add('correct');
+    $('qFb').className='quiz-fb wrg show';
+    $('qFb').innerHTML=`❌ <b>再想想哦！</b><br>正确答案是 ${String.fromCharCode(65+q.ans)}。<br>解析：${q.explain}`;
+  }
+  $('qNext').disabled=false;
+}
+function nextQ(){
+  quizIdx++;
+  if(quizIdx>=quizSet.length){
+    let good=Math.ceil(quizSet.length*0.75), ok=Math.ceil(quizSet.length*0.5);
+    showModal('🎉 闯关完成！',`你答对了 ${quizScore}/${quizSet.length} 关！${quizScore>=good?'太厉害了！🌟🌟🌟':quizScore>=ok?'继续加油！🌟🌟':'多多练习哦！🌟'}（即将开始新一轮全新题目）`);
+    startQuizRound();
+  }
+  renderQuiz();
+}
+
+// ===== PANE 4: CREATIVE DESIGN =====
+const colors=['#4f46e5','#f43f5e','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ec4899','#84cc16'];
+const CSC=25; // 创意设计坊每格像素
+let dragIdx=-1, dragOffX=0, dragOffY=0;
+
+function updCreativeSliders(){
+  $('cvB').textContent=$('cB').value;
+  $('cvH').textContent=$('cH').value;
+  $('cvT').textContent=$('cT').value;
+}
+function addCreativeShape(type){
+  let c=$('c4');
+  let b=+$('cB').value, h=+$('cH').value, t=+$('cT').value;
+  if(type===2 && t>=b) t=Math.max(1,b-1); // 梯形上底必须小于下底
+  let col=colors[Math.floor(Math.random()*colors.length)];
+  let area;
+  if(type===0)area=b*h;
+  else if(type===1)area=b*h/2;
+  else if(type===2)area=(t+b)*h/2;
+  else area=b*h;
+  let w=(type===0)?(b+1)*CSC:b*CSC, hh=h*CSC;
+  let px=Math.random()*Math.max(10,c.width-w-20)+10;
+  let py=Math.random()*Math.max(10,c.height-hh-20)+10;
+  creativeShapes.push({type,x:px,y:py,b,h,t,col,area});
+  drawCreative();
+}
+function clearCreative(){creativeShapes=[];dragIdx=-1;drawCreative();}
+
+// 计算图形包围盒（用于点击/拖动检测）
+function shapeBounds(s){
+  let h=s.h*CSC;
+  let w=(s.type===0)?(s.b+1)*CSC:s.b*CSC;
+  return {x:s.x,y:s.y,w,h};
+}
+function getShapeAt(mx,my){
+  for(let i=creativeShapes.length-1;i>=0;i--){
+    let b=shapeBounds(creativeShapes[i]);
+    if(mx>=b.x&&mx<=b.x+b.w&&my>=b.y&&my<=b.y+b.h)return i;
+  }
+  return -1;
+}
+// 屏幕坐标 → canvas 内部坐标（处理 CSS 缩放）
+function getCanvasPos(e){
+  let c=$('c4'),rect=c.getBoundingClientRect();
+  let cx=e.touches?e.touches[0].clientX:e.clientX;
+  let cy=e.touches?e.touches[0].clientY:e.clientY;
+  return {x:(cx-rect.left)*(c.width/rect.width),y:(cy-rect.top)*(c.height/rect.height)};
+}
+function creativeDown(e){
+  let p=getCanvasPos(e);
+  dragIdx=getShapeAt(p.x,p.y);
+  if(dragIdx>=0){
+    let s=creativeShapes[dragIdx];
+    dragOffX=p.x-s.x;dragOffY=p.y-s.y;
+    creativeShapes.push(creativeShapes.splice(dragIdx,1)[0]); // 选中的置于最上层
+    dragIdx=creativeShapes.length-1;
+    $('c4').style.cursor='grabbing';
+    drawCreative();
+    e.preventDefault();
+  }
+}
+function creativeMove(e){
+  if(dragIdx<0){
+    let p=getCanvasPos(e);
+    $('c4').style.cursor=getShapeAt(p.x,p.y)>=0?'grab':'default';
+    return;
+  }
+  let c=$('c4'),p=getCanvasPos(e),s=creativeShapes[dragIdx];
+  let b=shapeBounds(s);
+  let nx=p.x-dragOffX, ny=p.y-dragOffY;
+  nx=Math.max(0,Math.min(nx,c.width-b.w));
+  ny=Math.max(0,Math.min(ny,c.height-b.h));
+  s.x=nx;s.y=ny;
+  drawCreative();
+  e.preventDefault();
+}
+function creativeUp(){
+  if(dragIdx>=0){dragIdx=-1;$('c4').style.cursor='grab';}
+}
+
+function drawCreative(){
+  let c=$('c4'),x=c.getContext('2d');c.width=800;c.height=400;
+  x.strokeStyle='#f8f8f8';x.lineWidth=.5;
+  for(let i=0;i<=800;i+=20){x.beginPath();x.moveTo(i,0);x.lineTo(i,400);x.stroke();}
+  for(let i=0;i<=400;i+=20){x.beginPath();x.moveTo(0,i);x.lineTo(800,i);x.stroke();}
+
+  if(creativeShapes.length===0){
+    x.fillStyle='#bbb';x.font='14px sans-serif';x.textAlign='center';
+    x.fillText('设置大小 → 点击按钮添加图形 → 按住图形拖动它～',400,200);
+  }
+
+  let total=0;
+  creativeShapes.forEach((s,idx)=>{
+    total+=s.area;
+    let sc=CSC, dragging=(idx===dragIdx);
+    x.fillStyle=s.col+(dragging?'44':'22');
+    x.strokeStyle=s.col;x.lineWidth=dragging?3:2;
+    if(dragging){x.shadowColor='rgba(0,0,0,.25)';x.shadowBlur=10;x.shadowOffsetY=3;}
+    x.beginPath();
+    if(s.type===0){// para
+      x.moveTo(s.x,s.y+s.h*sc);x.lineTo(s.x+s.b*sc,s.y+s.h*sc);
+      x.lineTo(s.x+s.b*sc+sc,s.y);x.lineTo(s.x+sc,s.y);
+    }else if(s.type===1){// tri
+      x.moveTo(s.x,s.y+s.h*sc);x.lineTo(s.x+s.b*sc,s.y+s.h*sc);
+      x.lineTo(s.x+s.b*sc/2,s.y);
+    }else if(s.type===2){// trap（按真实上底绘制）
+      let inset=(s.b-(s.t||1))/2;
+      x.moveTo(s.x,s.y+s.h*sc);x.lineTo(s.x+s.b*sc,s.y+s.h*sc);
+      x.lineTo(s.x+(s.b-inset)*sc,s.y);x.lineTo(s.x+inset*sc,s.y);
+    }else{// rect
+      x.rect(s.x,s.y,s.b*sc,s.h*sc);
+    }
+    x.closePath();x.fill();x.stroke();
+    x.shadowColor='transparent';x.shadowBlur=0;x.shadowOffsetY=0;
+    x.fillStyle=s.col;x.font='bold 11px sans-serif';x.textAlign='center';
+    x.fillText(s.area+'格²',s.x+s.b*sc/2,s.y+s.h*sc/2+4);
+  });
+  $('totalArea').textContent=total;
+}
+
+// ===== INIT =====
+function init(){
+  setShape(0);
+  startQuizRound();
+  renderQuiz();
+  drawCreative();
+  let c4=$('c4');
+  c4.addEventListener('mousedown',creativeDown);
+  c4.addEventListener('mousemove',creativeMove);
+  window.addEventListener('mouseup',creativeUp);
+  c4.addEventListener('touchstart',creativeDown,{passive:false});
+  c4.addEventListener('touchmove',creativeMove,{passive:false});
+  window.addEventListener('touchend',creativeUp);
+}
+init();
+</script>
+</body>
+</html>
